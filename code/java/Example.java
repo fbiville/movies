@@ -11,16 +11,14 @@ public class Example {
 
   public static void main(String...args) {
 
-    Driver driver = GraphDatabase.driver("bolt://<HOST>:<BOLTPORT>",
-              AuthTokens.basic("<USERNAME>","<PASSWORD>"));
+    Driver driver = GraphDatabase.driver("neo4j+s://demo.neo4jlabs.com:7687",
+              AuthTokens.basic("movies","movies"));
 
-    try (Session session = driver.session(SessionConfig.forDatabase("neo4j"))) {
+    try (Session session = driver.session(SessionConfig.forDatabase("movies"))) {
 
       String cypherQuery =
-        "MATCH (movie:Movie)<-[:ACTED_IN]-(actor)-[:ACTED_IN]->(rec:Movie) " +
-        "WHERE movie.title = $favorite " +
-        "RETURN rec.title as title, count(*) as freq " +
-        "ORDER BY freq DESC LIMIT 5 " ;
+        "MATCH (movie:Movie {title:$favorite})<-[:ACTED_IN]-(actor)-[:ACTED_IN]->(rec:Movie)" +
+        "RETURN distinct rec.title as title LIMIT 20";
 
       var result = session.readTransaction(
         tx -> tx.run(cypherQuery, 

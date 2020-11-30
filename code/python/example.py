@@ -4,17 +4,15 @@
 from neo4j import GraphDatabase, basic_auth
 
 driver = GraphDatabase.driver(
-  "bolt://<HOST>:<BOLTPORT>", 
-  auth=basic_auth("<USERNAME>", "<PASSWORD>"))
+  "neo4j+s://demo.neo4jlabs.com:7687", 
+  auth=basic_auth("movies", "movies"))
 
 cypher_query = '''
-MATCH (movie:Movie)<-[:ACTED_IN]-(actor)-[:ACTED_IN]->(rec:Movie) 
-WHERE movie.title = $favorite 
-RETURN rec.title as title, count(*) as freq 
-ORDER BY freq DESC LIMIT 5 
+MATCH (movie:Movie {title:$favorite})<-[:ACTED_IN]-(actor)-[:ACTED_IN]->(rec:Movie)
+RETURN distinct rec.title as title LIMIT 20
 '''
 
-with driver.session(database="neo4j") as session:
+with driver.session(database="movies") as session:
   results = session.read_transaction(
     lambda tx: tx.run(cypher_query,
       favorite="The Matrix").data())

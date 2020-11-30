@@ -13,18 +13,16 @@ using Neo4j.Driver;
 namespace dotnet {
   class Example {
   static async Task Main() {
-    var driver = GraphDatabase.Driver("bolt://<HOST>:<BOLTPORT>", 
-                    AuthTokens.Basic("<USERNAME>", "<PASSWORD>"));
+    var driver = GraphDatabase.Driver("neo4j+s://demo.neo4jlabs.com:7687", 
+                    AuthTokens.Basic("movies", "movies"));
 
     var cypherQuery =
       @"
-      MATCH (movie:Movie)<-[:ACTED_IN]-(actor)-[:ACTED_IN]->(rec:Movie) 
-      WHERE movie.title = $favorite 
-      RETURN rec.title as title, count(*) as freq 
-      ORDER BY freq DESC LIMIT 5 
+      MATCH (movie:Movie {title:$favorite})<-[:ACTED_IN]-(actor)-[:ACTED_IN]->(rec:Movie)
+      RETURN distinct rec.title as title LIMIT 20
       ";
 
-    var session = driver.AsyncSession(o => o.WithDatabase("neo4j"));
+    var session = driver.AsyncSession(o => o.WithDatabase("movies"));
     var result = await session.ReadTransactionAsync(async tx => {
       var r = await tx.RunAsync(cypherQuery, 
               new { favorite="The Matrix"});
